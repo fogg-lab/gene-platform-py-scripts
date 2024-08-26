@@ -14,7 +14,6 @@ Compare the output to DESeq2 on your data to check the difference.
 
 from typing import Optional, Union
 import warnings
-from time import perf_counter
 
 import numpy as np
 from numpy.typing import NDArray
@@ -22,6 +21,16 @@ from scipy.optimize import minimize
 from scipy.special import polygamma
 from scipy.stats import trim_mean, norm
 from scipy.special import gammaln
+
+
+def check_dims(counts: np.ndarray) -> None:
+    if counts.shape[0] > counts.shape[1]:
+        warnings.warn(
+            f"Found {counts.shape[1]} genes and {counts.shape[0]} samples."
+            " If it's actually the other way around, you need to transpose the counts matrix"
+            " before calling this function!",
+            UserWarning,
+        )
 
 
 def vst(
@@ -49,13 +58,7 @@ def vst(
         VST-transformed counts.
 
     """
-    if counts.shape[0] > counts.shape[1]:
-        warnings.warn(
-            f"Found {counts.shape[1]} genes and {counts.shape[0]} samples."
-            " If it's actually the other way around, you need to transpose the counts matrix"
-            " before calling this function!",
-            UserWarning,
-        )
+    check_dims(counts)
     X = counts + 1
     max_disp = max(max_disp, len(X))
 
@@ -95,6 +98,18 @@ def vst(
         )
         / (4 * a0)
     )
+
+
+def log2_1p(counts: np.ndarray) -> np.ndarray:
+    return np.log2(counts + 1)
+
+
+def ln_1p(counts: np.ndarray) -> np.ndarray:
+    return np.log1p(counts)
+
+
+def log10_1p(counts: np.ndarray) -> np.ndarray:
+    return np.log10(counts + 1)
 
 
 def fit_size_factors(X: NDArray) -> tuple[NDArray, NDArray, NDArray]:
