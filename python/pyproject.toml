@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gene-platform-utils"
+version = "0.0.1"
+description = "Python helpers for the Gene Platform (run with pyodide)"
+dependencies = ["networkx", "numpy", "plotly", "scipy", "scikit-learn"]
+requires-python = ">= 3.9"
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]

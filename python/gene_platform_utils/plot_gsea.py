@@ -1,17 +1,21 @@
+from typing import TYPE_CHECKING
 import networkx as nx
 import plotly.graph_objects as go
 import numpy as np
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 
 def gene_concept_network_plot(
-    gsea_res,
-    de_res,
-    genes_df,
-    color_metric="log2FoldChange",
-    pvalue_threshold=0.05,
-    layout_seed=0,
-    color_seed=0,
-):
+    gsea_res: pd.DataFrame,
+    de_res: pd.DataFrame,
+    genes_df: pd.DataFrame,
+    color_metric: str = "log2FoldChange",
+    pvalue_threshold: float = 0.05,
+    layout_seed: int = 0,
+    color_seed: int = 0,
+) -> str:
     # Filter DE results by p-value
     de_res = de_res[de_res["pvalue"] < pvalue_threshold]
 
@@ -148,5 +152,4 @@ def gene_concept_network_plot(
         ),
     )
 
-    fig.show()
-    return fig
+    return fig.to_html()

@@ -17,7 +17,6 @@ import warnings
 
 import numpy as np
 from numpy.typing import NDArray
-import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import polygamma
 from scipy.stats import trim_mean, norm
@@ -25,7 +24,7 @@ from scipy.special import gammaln
 
 
 def vst(
-    counts: pd.DataFrame,
+    counts: np.ndarray,
     min_mu: float = 0.5,
     min_disp: float = 1e-8,
     max_disp: float = 10.0,
@@ -44,7 +43,6 @@ def vst(
         VST-transformed counts.
 
     """
-    var_names = counts.columns
     if counts.shape[0] > counts.shape[1]:
         warnings.warn(
             f"Found {counts.shape[1]} genes and {counts.shape[0]} samples."
@@ -52,8 +50,7 @@ def vst(
             " before calling this function!",
             UserWarning,
         )
-    counts += 1
-    X = counts.values
+    X = counts + 1
     max_disp = max(max_disp, len(X))
 
     normed_counts, size_factors, normed_means = fit_size_factors(X)
@@ -66,11 +63,7 @@ def vst(
         X, size_factors, min_mu, min_disp, max_disp, beta_tol, MoM_dispersions
     )
 
-    a0, a1 = fit_parametric_dispersion_trend(
-        dispersions, normed_means, var_names, min_disp
-    )
-
-    counts -= 1
+    a0, a1 = fit_parametric_dispersion_trend(dispersions, normed_means, min_disp)
 
     return np.log2(
         (
@@ -201,7 +194,6 @@ def fit_mean_dispersion_trend(
 def fit_parametric_dispersion_trend(
     dispersions: NDArray,
     normed_means: NDArray,
-    var_names: NDArray,
     min_disp: float,
 ) -> NDArray:
     """Fit a parametric dispersion trend.
@@ -209,43 +201,37 @@ def fit_parametric_dispersion_trend(
     Args:
         dispersions: The dispersions.
         normed_means: The normalized means.
-        var_names: The variable names.
         min_disp: The minimum dispersion.
 
     Returns:
         The trend coefficients and the fitted dispersions.
 
     """
-    targets = pd.Series(dispersions, index=var_names)
-    covariates = pd.Series(1 / normed_means, index=var_names)
-    covariates_mask = pd.Series(
-        np.ones(dispersions.shape[0], dtype=bool), index=var_names
-    )
+    targets = dispersions
+    covariates = 1 / normed_means
+    mask = np.ones(dispersions.shape[0], dtype=bool)
 
-    for var in var_names:
-        if np.isinf(covariates.loc[var]).any() or np.isnan(covariates.loc[var]).any():
-            targets.drop(labels=[var], inplace=True)
-            covariates.drop(labels=[var], inplace=True)
-            covariates_mask.loc[var] = False
+    for i in range(len(targets)):
+        if np.isinf(covariates[i]).any() or np.isnan(covariates[i]).any():
+            mask[i] = False
 
-    old_coeffs = pd.Series([0.1, 0.1])
-    coeffs = pd.Series([1.0, 1.0])
+    old_coeffs = np.array([0.1, 0.1])
+    coeffs = np.array([1.0, 1.0])
     while (coeffs > 1e-10).all() and (
         np.log(np.abs(coeffs / old_coeffs)) ** 2
     ).sum() >= 1e-6:
         old_coeffs = coeffs
-        coeffs, predictions, converged = dispersion_trend_gamma_glm(covariates, targets)
+        coeffs, predictions, converged = dispersion_trend_gamma_glm(
+            covariates[mask], targets[mask]
+        )
 
         if not converged or (coeffs <= 1e-10).any():
-            print("Switching to a mean-based dispersion trend.", flush=True)
+            warnings.warn("Switching to a mean-based dispersion trend.", UserWarning)
             return fit_mean_dispersion_trend(dispersions, min_disp)
 
         # Filter out genes that are too far away from the curve before refitting
-        pred_ratios = dispersions[covariates_mask.values] / predictions
-        drop_genes = targets[(pred_ratios < 1e-4) | (pred_ratios >= 15)].index
-        targets.drop(drop_genes, inplace=True)
-        covariates.drop(drop_genes, inplace=True)
-        covariates_mask.loc[drop_genes] = False
+        pred_ratios = dispersions[mask] / predictions
+        mask[np.where(mask)[0][(pred_ratios < 1e-4) | (pred_ratios >= 15)]] = False
 
     return coeffs
 
@@ -528,21 +514,18 @@ def nb_nll(
 
 
 def dispersion_trend_gamma_glm(
-    covariates: pd.Series, targets: pd.Series
+    covariates: NDArray, targets: NDArray
 ) -> tuple[np.ndarray, np.ndarray, bool]:
-    covariates_w_intercept = covariates.to_frame()
-    covariates_w_intercept.insert(0, "intercept", 1)
-    covariates_fit = covariates_w_intercept.values
-    targets_fit = targets.values
+    covariates = np.column_stack((np.ones(covariates.shape[0]), covariates))
 
     def loss(coeffs):
-        mu = covariates_fit @ coeffs
-        return np.nanmean(targets_fit / mu + np.log(mu), axis=0)
+        mu = covariates @ coeffs
+        return np.nanmean(targets / mu + np.log(mu), axis=0)
 
     def grad(coeffs):
-        mu = covariates_fit @ coeffs
+        mu = covariates @ coeffs
         return -np.nanmean(
-            ((targets_fit / mu - 1)[:, None] * covariates_fit) / mu[:, None], axis=0
+            ((targets / mu - 1)[:, None] * covariates) / mu[:, None], axis=0
         )
 
     try:
@@ -557,4 +540,4 @@ def dispersion_trend_gamma_glm(
         return np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), False
 
     coeffs = res.x
-    return coeffs, covariates_fit @ coeffs, res.success
+    return coeffs, covariates @ coeffs, res.success
