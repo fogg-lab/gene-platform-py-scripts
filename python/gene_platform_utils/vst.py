@@ -14,6 +14,7 @@ Compare the output to DESeq2 on your data to check the difference.
 
 from typing import Optional, Union
 import warnings
+from time import perf_counter
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,6 +30,8 @@ def vst(
     min_disp: float = 1e-8,
     max_disp: float = 10.0,
     beta_tol: float = 1e-8,
+    subset_n_genes: Optional[int] = 1200,
+    rand_seed: Optional[int] = 123,
 ) -> NDArray:
     """Variance stabilizing transformation (VST).
 
@@ -38,6 +41,9 @@ def vst(
         min_disp: The minimum dispersion.
         max_disp: The maximum dispersion.
         beta_tol: The beta tolerance.
+        subset_n_genes: The number of genes to subset for faster dispersion fitting.
+                        If None, all genes are used. The default is 1200.
+        rand_seed: The random seed for gene subsetting. The default is 123.
 
     Returns:
         VST-transformed counts.
@@ -55,15 +61,30 @@ def vst(
 
     normed_counts, size_factors, normed_means = fit_size_factors(X)
 
+    if subset_n_genes is None:
+        subset_n_genes = X.shape[1]
+    else:
+        subset_n_genes = min(X.shape[1], subset_n_genes)
+    rng = np.random.default_rng(rand_seed)
+    gene_subset = np.sort(rng.choice(X.shape[1], subset_n_genes, replace=False))
+
     MoM_dispersions = fit_MoM_dispersions(
-        normed_counts, size_factors, min_disp, max_disp
+        normed_counts[:, gene_subset], size_factors, min_disp, max_disp
     )
 
     dispersions = fit_dispersions(
-        X, size_factors, min_mu, min_disp, max_disp, beta_tol, MoM_dispersions
+        X[:, gene_subset],
+        size_factors,
+        min_mu,
+        min_disp,
+        max_disp,
+        beta_tol,
+        MoM_dispersions,
     )
 
-    a0, a1 = fit_parametric_dispersion_trend(dispersions, normed_means, min_disp)
+    a0, a1 = fit_parametric_dispersion_trend(
+        dispersions, normed_means[gene_subset], min_disp
+    )
 
     return np.log2(
         (
