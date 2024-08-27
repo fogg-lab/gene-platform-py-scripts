@@ -1,5 +1,21 @@
 # gene-platform-utils
 
+## Directory Structure
+
+*(Relative to the root of the containing repo, https://github.com/fogg-lab/gene-platform-utils)*
+
+python/
+├── gene_platform_utils/
+│   ├── __init__.py
+│   ├── generate_html_3d_embedding.py
+│   ├── plot_de.py
+│   ├── plot_eda.py
+│   ├── plot_gsea.py
+│   └── transformation.py
+├── README.md
+├── pyproject.toml
+└── requirements.txt
+
 ## Modules
 
 ### transformation
