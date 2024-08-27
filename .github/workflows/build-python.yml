@@ -1,0 +1,38 @@
+name: Build Python Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'python/**'
+
+jobs:
+  build-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: |
+          cd python
+          python -m build
+      - name: Update Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          name: Latest Release
+          files: |
+            python/dist/*.whl
+            python/dist/*.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
