@@ -1,23 +1,20 @@
-from typing import TYPE_CHECKING
+from typing import Union
 import networkx as nx
 import plotly.graph_objects as go
 import numpy as np
 
-if TYPE_CHECKING:
-    import pandas as pd
-
 
 def gene_concept_network_plot(
-    gsea_res: pd.DataFrame,
-    de_res: pd.DataFrame,
-    genes_df: pd.DataFrame,
+    gsea_res: dict[str, dict[str, Union[str, float]]],
+    de_res: dict[str, dict[str, Union[str, float]]],
+    ensembl_to_symbol: dict[str, str],
     color_metric: str = "log2FoldChange",
     pvalue_threshold: float = 0.05,
     layout_seed: int = 0,
     color_seed: int = 0,
 ) -> str:
     # Filter DE results by p-value
-    de_res = de_res[de_res["pvalue"] < pvalue_threshold]
+    de_res = {k: v for k, v in de_res.items() if v["pvalue"] < pvalue_threshold}
 
     # Create a new graph
     G = nx.Graph()
@@ -26,33 +23,27 @@ def gene_concept_network_plot(
     rng = np.random.default_rng(color_seed)
     pathway_colors = {
         pathway_id: f"rgb({rng.integers(0, 256)}, {rng.integers(0, 256)}, {rng.integers(0, 256)})"
-        for pathway_id in gsea_res.index
+        for pathway_id in gsea_res.keys()
     }
 
     # Add pathway nodes and their sizes
     pathway_sizes = {}
-    for pathway_id in gsea_res.index:
-        pathway_genes = set(
-            gsea_res.loc[pathway_id, "core_enrichment_ensembl"].split("/")
-        )
+    for pathway_id, pathway_data in gsea_res.items():
+        pathway_genes = set(pathway_data["core_enrichment_ensembl"].split("/"))
         pathway_sizes[pathway_id] = len(pathway_genes)
         G.add_node(
             pathway_id,
             size=len(pathway_genes),
-            label=gsea_res.loc[pathway_id, "Description"],
+            label=pathway_data["Description"],
         )
 
     # Add gene nodes and edges
-    for gene in de_res.index:
-        for pathway_id in gsea_res.index:
-            pathway_genes = set(
-                gsea_res.loc[pathway_id, "core_enrichment_ensembl"].split("/")
-            )
+    for gene in de_res.keys():
+        for pathway_id, pathway_data in gsea_res.items():
+            pathway_genes = set(pathway_data["core_enrichment_ensembl"].split("/"))
             if gene in pathway_genes:
-                gene_sym = genes_df.loc[
-                    genes_df.index.str.startswith(gene), "gene_name"
-                ].values[0]
-                G.add_node(gene_sym, color_metric=de_res.loc[gene, color_metric])
+                gene_sym = ensembl_to_symbol[gene]
+                G.add_node(gene_sym, color_metric=de_res[gene][color_metric])
                 G.add_edge(gene_sym, pathway_id, color=pathway_colors[pathway_id])
 
     # Layout with seed for reproducibility
