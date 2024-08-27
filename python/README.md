@@ -1,4 +1,4 @@
-# Gene Platform Utils API Documentation
+# gene-platform-utils
 
 ## Modules
 
