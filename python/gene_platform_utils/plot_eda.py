@@ -1,8 +1,10 @@
 import numpy as np
 import plotly.graph_objects as go
 from scipy.cluster import hierarchy
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
-from gene_platform_utils.generate_html_3d_embedding import generate_html_3d_embedding
+from gene_platform_utils.generate_html_3d_embedding import generate_scattergl_html
 
 
 def calculate_correlation(counts: np.ndarray) -> np.ndarray:
@@ -69,3 +71,43 @@ def create_correlation_heatmap(counts: np.ndarray, sample_ids: list[str]) -> str
     html = html.replace("</head>", f"{plotly_cdn}{css}</head>")
 
     return html
+
+
+def create_pca_plot(counts, sample_ids):
+    pca = PCA(n_components=3)
+    pca_result = pca.fit_transform(counts.T)
+
+    data_csv = "ID,x,y,z\n" + "\n".join(
+        [f"{id},{x},{y},{z}" for id, (x, y, z) in zip(sample_ids, pca_result)]
+    )
+
+    metadata_csv = "ID\n" + "\n".join(sample_ids)
+
+    html_content = generate_scattergl_html(
+        title1="PCA 3D Plot",
+        title2="PCA 3D Plot",
+        data_csv_content=data_csv,
+        metadata_csv_content=metadata_csv,
+    )
+
+    return html_content
+
+
+def create_tsne_plot(counts, sample_ids):
+    tsne = TSNE(n_components=3, random_state=42)
+    tsne_result = tsne.fit_transform(counts.T)
+
+    data_csv = "ID,x,y,z\n" + "\n".join(
+        [f"{id},{x},{y},{z}" for id, (x, y, z) in zip(sample_ids, tsne_result)]
+    )
+
+    metadata_csv = "ID\n" + "\n".join(sample_ids)
+
+    html_content = generate_scattergl_html(
+        title1="t-SNE 3D Plot",
+        title2="t-SNE 3D Plot",
+        data_csv_content=data_csv,
+        metadata_csv_content=metadata_csv,
+    )
+
+    return html_content
