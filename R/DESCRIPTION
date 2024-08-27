@@ -1,0 +1,14 @@
+Package: genePlatformUtils
+Title: R Functions for the Gene Platform
+Version: 0.0.1
+Description: R helpers for the Gene Platform to use in the browser via WebAssembly.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    stats,
+    utils
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
