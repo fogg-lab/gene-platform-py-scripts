@@ -2,6 +2,8 @@ import numpy as np
 import plotly.graph_objects as go
 from scipy.cluster import hierarchy
 
+from gene_platform_utils.generate_html_3d_embedding import generate_html_3d_embedding
+
 
 def calculate_correlation(counts: np.ndarray) -> np.ndarray:
     """
