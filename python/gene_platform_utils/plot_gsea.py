@@ -14,7 +14,7 @@ def gene_concept_network_plot(
     color_seed: int = 0,
 ) -> str:
     # Filter DE results by p-value
-    de_res = {k: v for k, v in de_res.items() if v["pvalue"] < pvalue_threshold}
+    de_res = {k: v for k, v in de_res.items() if v["P.Value"] < pvalue_threshold}
 
     # Create a new graph
     G = nx.Graph()
