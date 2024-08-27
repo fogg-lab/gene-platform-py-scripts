@@ -66,7 +66,7 @@ This module provides functions for creating gene set enrichment analysis plots.
 
 #### Functions
 
-- `gene_concept_network_plot(gsea_res: pd.DataFrame, de_res: pd.DataFrame, genes_df: pd.DataFrame, color_metric: str = "log2FoldChange", pvalue_threshold: float = 0.05, layout_seed: int = 0, color_seed: int = 0) -> str`
+- `gene_concept_network_plotgsea_res: dict[str, dict[str, Union[str, float]]], de_res: dict[str, dict[str, Union[str, float]]], ensembl_to_symbol: dict[str, str], color_metric: str = "log2FoldChange", pvalue_threshold: float = 0.05, layout_seed: int = 0, color_seed: int = 0) -> str`
   
   Creates an interactive gene concept network plot using Plotly.
 
