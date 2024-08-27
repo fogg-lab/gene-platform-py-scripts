@@ -4,6 +4,7 @@
 
 *(Relative to the root of the containing repo, https://github.com/fogg-lab/gene-platform-utils)*
 
+```
 python/
 ├── gene_platform_utils/
 │   ├── __init__.py
@@ -15,6 +16,7 @@ python/
 ├── README.md
 ├── pyproject.toml
 └── requirements.txt
+```
 
 ## Modules
 
