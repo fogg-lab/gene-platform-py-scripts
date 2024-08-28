@@ -1,28 +1,30 @@
-name: Build Python Package
+name: Build Package
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'python/**'
+      - 'gene_platform_utils/*.py'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - 'README.md'
 
 jobs:
-  build-python:
+  build-package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.12'
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
       - name: Build package
         run: |
-          cd python
           python -m build
       - name: Update Release
         uses: softprops/action-gh-release@v1
@@ -30,8 +32,8 @@ jobs:
           tag_name: latest
           name: Latest Release
           files: |
-            python/dist/*.whl
-            python/dist/*.tar.gz
+            dist/*.whl
+            dist/*.tar.gz
           draft: false
           prerelease: false
         env:

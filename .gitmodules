@@ -1,3 +1,0 @@
-[submodule "rust/gsea-rs"]
-	path = rust/gsea-rs
-	url = git@github.com:fogg-lab/gsea-rs.git
