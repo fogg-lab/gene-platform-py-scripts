@@ -94,7 +94,7 @@ def create_pca_plot(counts, sample_ids):
 
 
 def create_tsne_plot(counts, sample_ids):
-    tsne = TSNE(n_components=3, random_state=42)
+    tsne = TSNE(n_components=3, random_state=123)
     tsne_result = tsne.fit_transform(counts.T)
 
     data_csv = "ID,x,y,z\n" + "\n".join(
