@@ -394,11 +394,9 @@ def generate_scattergl_html(
     # Replace placeholders in the template
     html_content = TEMPLATE.replace("{{TITLE1}}", title1)
     html_content = html_content.replace("{{TITLE2}}", title2)
+    html_content = html_content.replace("ID,x,y,z\na,1,2,3\nb,2,3,4", data_csv_content)
     html_content = html_content.replace(
-        "ID,x,y,z\\na,1,2,3\\nb,2,3,4", data_csv_content
-    )
-    html_content = html_content.replace(
-        "ID,ch1,ch2,ch3\\na,A,B,C\\nb,B,C,D", metadata_csv_content
+        "ID,ch1,ch2,ch3\na,A,B,C\nb,B,C,D", metadata_csv_content
     )
 
     return html_content
