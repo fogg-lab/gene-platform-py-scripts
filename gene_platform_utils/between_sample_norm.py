@@ -36,26 +36,26 @@ def compute_tmm_effective_library_sizes(
     r = X / lib_size[:, np.newaxis]
     r_ref = ref / lib_size_ref
 
-    m = np.log2(r / r_ref)
-    a = np.log2(r * r_ref) / 2
-    w = (1 - r) / X + (1 - r_ref) / ref
+    M = np.log2(r / r_ref)
+    A = np.log2(r * r_ref) / 2
+    W = (1 - r) / X + (1 - r_ref) / ref
 
-    f = list()
-    for i in range(X.shape[0]):
-        finite = np.isfinite(m[i]) & np.isfinite(a[i])
-        mm = m[i][finite]
-        aa = a[i][finite]
-        ww = w[i][finite]
-        n = len(mm)
-        m_low = np.floor(n * m_trim) + 1
-        m_high = n - m_low + 1
-        a_low = np.floor(n * a_trim) + 1
-        a_high = n - a_low + 1
+    finite = np.isfinite(M) & np.isfinite(A)
+    N = np.sum(finite, axis=1)
+    M_low = np.floor(N * m_trim) + 1
+    M_high = N - M_low + 1
+    A_low = np.floor(N * a_trim) + 1
+    A_high = N - A_low + 1
+
+    f = []
+    for i in range(X.shape[0]):  # for each sample
+        m, a, w = [M[i, finite[i]], A[i, finite[i]], W[i, finite[i]]]
+        m_rank, a_rank = rankdata(m), rankdata(a)
         keep_genes_mask = np.logical_and(
-            np.logical_and(rankdata(mm) >= m_low, rankdata(mm) <= m_high),
-            np.logical_and(rankdata(aa) >= a_low, rankdata(aa) <= a_high),
+            np.logical_and(m_rank >= M_low[i], m_rank <= M_high[i]),
+            np.logical_and(a_rank >= A_low[i], a_rank <= A_high[i]),
         )
-        f.append(np.nansum(keep_genes_mask * mm / ww) / np.nansum(keep_genes_mask / ww))
+        f.append(np.nansum(keep_genes_mask * m / w) / np.nansum(keep_genes_mask / w))
 
     tmm_norm_factors = np.power(2, f)
 
