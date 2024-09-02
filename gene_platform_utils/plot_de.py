@@ -13,8 +13,8 @@ def create_volcano_plot(
     """
     Create an interactive volcano plot using Plotly.
     """
-    log2fc_col = column_names.index("log2FoldChange")
-    pvalue_col = column_names.index("pvalue")
+    log2fc_col = column_names.index("logFC")
+    pvalue_col = column_names.index("P.Value")
 
     diff_expr = np.full(len(row_names), "Not sig.")
     diff_expr[
@@ -90,9 +90,9 @@ def create_mean_difference_plot(
     """
     Create an interactive mean difference plot using Plotly.
     """
-    basemean_col = column_names.index("baseMean")
-    log2fc_col = column_names.index("log2FoldChange")
-    padj_col = column_names.index("padj")
+    basemean_col = column_names.index("AveExpr")
+    log2fc_col = column_names.index("logFC")
+    padj_col = column_names.index("adj.P.Val")
 
     mean_expression = np.log2((data[:, basemean_col] + 0.5) / 2)
     significant = data[:, padj_col] < fdr
