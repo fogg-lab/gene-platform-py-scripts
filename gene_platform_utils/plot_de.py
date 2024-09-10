@@ -14,7 +14,7 @@ def create_volcano_plot(
     Create an interactive volcano plot using Plotly.
     """
     log2fc_col = column_names.index("logFC")
-    pvalue_col = column_names.index("P.Value")
+    pvalue_col = column_names.index("adj.P.Val")
 
     diff_expr = np.full(len(row_names), "Not sig.")
     diff_expr[
