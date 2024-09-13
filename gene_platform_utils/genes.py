@@ -42,7 +42,6 @@ def get_gene_info(
         formatter = str.lower
 
     gene_record_idx = ["ensembl_gene", "entrezgene", "symbol"].index(id_type)
-    formatter = int if id_type == "entrezgene" else str.lower
     ref_ids = np.array([formatter(rec[gene_record_idx]) for rec in gene_reference])
     genes = np.array([formatter(g) for g in query_genes])
 
