@@ -33,10 +33,13 @@ def get_gene_info(
     test_gene = query_genes[0]
     if isinstance(test_gene, int) or all(c in digits for c in str(test_gene)):
         id_type = "entrezgene"
+        formatter = int
     elif test_gene.lower().startswith("ens") and "0000" in test_gene:
         id_type = "ensembl_gene"
+        formatter = lambda g: g.split(".")[0].lower()
     else:
         id_type = "symbol"
+        formatter = str.lower
 
     gene_record_idx = ["ensembl_gene", "entrezgene", "symbol"].index(id_type)
     formatter = int if id_type == "entrezgene" else str.lower
