@@ -7,8 +7,7 @@ import numpy as np
 def gene_concept_network_plot(
     gsea_res: dict[str, dict[str, Union[str, float]]],
     de_res: dict[str, dict[str, Union[str, float]]],
-    ensembl_to_symbol: dict[str, str],
-    color_metric: str = "log2FoldChange",
+    color_metric: str = "logFC",
     pvalue_threshold: float = 0.05,
     layout_seed: int = 0,
     color_seed: int = 0,
@@ -26,25 +25,25 @@ def gene_concept_network_plot(
         for pathway_id in gsea_res.keys()
     }
 
-    # Add pathway nodes and their sizes
+    # Add gene nodes and edges, as well as pathway nodes and their sizes
     pathway_sizes = {}
+    all_genes = set(de_res)
+    genes_not_added = all_genes.copy()
     for pathway_id, pathway_data in gsea_res.items():
-        pathway_genes = set(pathway_data["core_enrichment_ensembl"].split("/"))
+        pathway_genes = set(pathway_data["core_enrichment"].split("/"))
+        pathway_genes.intersection_update(all_genes)
         pathway_sizes[pathway_id] = len(pathway_genes)
         G.add_node(
             pathway_id,
             size=len(pathway_genes),
             label=pathway_data["Description"],
         )
-
-    # Add gene nodes and edges
-    for gene in de_res.keys():
-        for pathway_id, pathway_data in gsea_res.items():
-            pathway_genes = set(pathway_data["core_enrichment_ensembl"].split("/"))
-            if gene in pathway_genes:
-                gene_sym = ensembl_to_symbol[gene]
-                G.add_node(gene_sym, color_metric=de_res[gene][color_metric])
-                G.add_edge(gene_sym, pathway_id, color=pathway_colors[pathway_id])
+        new_node_genes = pathway_genes.intersection(genes_not_added)
+        genes_not_added -= new_node_genes
+        for gene in new_node_genes:
+            G.add_node(gene, color_metric=de_res[gene][color_metric])
+        for gene in pathway_genes:
+            G.add_edge(gene, pathway_id, color=pathway_colors[pathway_id])
 
     # Layout with seed for reproducibility
     pos = nx.fruchterman_reingold_layout(G, k=1, iterations=400, seed=layout_seed)
@@ -133,8 +132,8 @@ def gene_concept_network_plot(
     fig = go.Figure(
         data=edge_traces + [gene_trace] + pathway_traces,
         layout=go.Layout(
-            width=1000,  # Set the width of the figure
-            height=800,  # Set the height of the figure
+            width=1000,
+            height=800,
             showlegend=True,
             hovermode="closest",
             margin=dict(b=0, l=0, r=0, t=20),

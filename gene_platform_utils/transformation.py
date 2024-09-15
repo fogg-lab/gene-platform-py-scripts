@@ -223,8 +223,7 @@ def fit_mean_dispersion_trend(
     mean_disp = trim_mean(
         dispersions[dispersions > 10 * min_disp], proportiontocut=0.001
     )
-    fitted_dispersions = np.full(dispersions.shape[0], mean_disp)
-    return mean_disp, fitted_dispersions
+    return mean_disp, mean_disp
 
 
 def fit_parametric_dispersion_trend(
